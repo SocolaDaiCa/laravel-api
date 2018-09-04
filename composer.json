@@ -1,0 +1,20 @@
+{
+    "name": "socola/laravel-api",
+    "description": "make all simple unit when creating api CRUD in laravel",
+    "type": "liblary",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Socola",
+            "email": "tokentien@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload":
+    {
+        "psr-4":
+        {
+            "Socola\\": "src/Socola"
+        }
+    }
+}
