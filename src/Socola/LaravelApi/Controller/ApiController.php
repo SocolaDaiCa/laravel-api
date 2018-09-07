@@ -14,11 +14,11 @@ trait ApiController {
 
 	public function _index(Request $request)
 	{
-		$limit = $this->limit($request);
-		if($limit === 0) {
-			$limit = $this->model::count();
-		}
-		return $this->model::select($this->select($request))->paginate($limit);
+	    $records = $this->model::select($request->get('fields', $this->fields));
+
+	    $limit = $request->get('limit', $this->limit) ?: $records->count();
+	    $paginate = $records->paginate($limit);
+		return $paginate;
 	}
 
 	public function show($id)
@@ -33,6 +33,15 @@ trait ApiController {
 
 	public function store(Request $request)
 	{
-		$this->model::store($request->all());
+	    return $this->_store($request->all());
+	}
+
+    public function _store($params)
+    {
+        try{
+            $this->model::create($params);
+        } catch (\Exception $e) {
+            return $this->responseErrors('store fail', $e->getTrace(), 500);
+        }
 	}
 }

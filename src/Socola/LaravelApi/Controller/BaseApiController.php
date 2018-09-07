@@ -15,9 +15,13 @@ trait BaseApiController
 		return $this->model::find($id);
 	}
 
-	public function limit(Request $request)
+    public function paginate($records, $limit)
+    {
+        return $records->paginate($this->limit($limit));
+	}
+
+	public function limit($limit)
 	{
-		$limit = $request->get('limit');
 		switch ($limit) {
 			case 0:
 				return 0;
@@ -28,7 +32,7 @@ trait BaseApiController
 		}
 	}
 
-    public function select(Request $request)
+    public function select($fi)
     {
         $fields = explode(',', $request->get('fields'));
         $fields = array_filter($fields, function($item) {
@@ -39,4 +43,22 @@ trait BaseApiController
         }
         return $this->fields;
 	}
+    public function responseErrors($message, $errors, $status)
+    {
+        $message = $message ?: $message = 'something wrong';
+        $errors = array_wrap($errors);
+        return response()->json([
+            'message' => $message,
+            'errors'  => array_map('array_wrap', $errors),
+            'status'  => $status,
+        ], $status);
+    }
+
+    public function responseSuccess($message, $status = 200)
+    {
+        return response()->json([
+            'message' => $message,
+            'status'  => $status,
+        ], $status);
+    }
 }
