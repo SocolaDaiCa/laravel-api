@@ -2,7 +2,7 @@
 
 namespace Socola\LaravelApi\Controller;
 
-use Socola\LaravelApi\Controller\BaseApiController;
+use Illuminate\Http\Request;
 
 trait ApiController {
 	use BaseApiController;
@@ -18,7 +18,7 @@ trait ApiController {
 		if($limit === 0) {
 			$limit = $this->model::count();
 		}
-		return $this->model:: paginate($limit);
+		return $this->model::select($this->select($request))->paginate($limit);
 	}
 
 	public function show($id)

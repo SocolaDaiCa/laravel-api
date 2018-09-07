@@ -2,10 +2,13 @@
 
 namespace Socola\LaravelApi\Controller;
 
+use Illuminate\Http\Request;
+
 trait BaseApiController
 {
-	protected $limit;
+	protected $limit = 25;
 	protected $model;
+	protected $fields = '*';
 
 	public function find($id)
 	{
@@ -23,5 +26,17 @@ trait BaseApiController
 			default:
 				return $limit;
 		}
+	}
+
+    public function select(Request $request)
+    {
+        $fields = explode(',', $request->get('fields'));
+        $fields = array_filter($fields, function($item) {
+            return $item != '';
+        });
+        if(!empty($fields)) {
+            return $fields;
+        }
+        return $this->fields;
 	}
 }

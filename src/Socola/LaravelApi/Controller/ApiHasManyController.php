@@ -2,7 +2,7 @@
 
 namespace Socola\LaravelApi\Controller;
 
-use Socola\LaravelApi\Controller\BaseApiController;
+use Illuminate\Http\Request;
 
 trait ApiHasMayController
 {
@@ -11,12 +11,12 @@ trait ApiHasMayController
 
 	public function index(Request $request, $id)
 	{
-		return $this->_index($request);
+		return $this->_index(collect($request->all()), $id);
 	}
 
-	public function _index(Request $request, $id)
+	public function _index($params, $id)
 	{
-		$limit = $this->limit($request);
+		$limit = $this->limit($params);
 		$records = $this->model::find($id)
 			->{$this->hasManyModel}();
 		if ($limit === 0) {
@@ -27,14 +27,13 @@ trait ApiHasMayController
 
 	public function store(Request $request, $id)
 	{
-		return $this->_store($request, $id);
+		return $this->_store(collect($request->all()), $id);
 	}
 
-	public function _store(Request $request, $id)
+	public function _store($params, $id)
 	{
 		$this->model::find($id)
 			->{$this->hasManyModel}()
-			->create($request->all());
-		
+			->create($params);
 	}
 }
