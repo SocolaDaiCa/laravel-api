@@ -8,12 +8,13 @@
 
 namespace Socola\LaravelApi\Controller;
 
-
 use Illuminate\Http\Request;
 
-class ApiManyToManyController
+trait ApiManyToManyController
 {
     use BaseApiController;
+
+    protected $manyToManyModel;
 
     public function index(Request $request, $id)
     {

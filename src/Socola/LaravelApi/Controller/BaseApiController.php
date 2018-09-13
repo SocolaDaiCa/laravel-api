@@ -9,6 +9,8 @@ trait BaseApiController
 	protected $limit = 25;
 	protected $model;
 	protected $fields = '*';
+	protected $indexWith = [];
+	protected $showWith = [];
 
 	public function find($id)
 	{

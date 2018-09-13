@@ -17,6 +17,7 @@ trait ApiController {
 	    $records = $this->model::select($request->get('fields', $this->fields));
 
 	    $limit = $request->get('limit', $this->limit) ?: $records->count();
+	    $records->load($this->indexWith);
 	    $paginate = $records->paginate($limit);
 		return $paginate;
 	}
@@ -28,7 +29,7 @@ trait ApiController {
 
 	public function _show($id)
 	{
-		return $this->find($id);
+		return $this->find($id)->load($this->showWith);
 	}
 
 	public function store(Request $request)
