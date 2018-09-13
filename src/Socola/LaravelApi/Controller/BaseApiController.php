@@ -18,11 +18,11 @@ trait BaseApiController
 
 	public function limit(Request $request)
 	{
-		$limit = $request->get('limit');
+		$limit = $request->get('limit', -1);
 		switch ($limit) {
 			case 0:
 				return 0;
-			case null:
+			case -1:
 				return $this->limit;
 			default:
 				return $limit;
