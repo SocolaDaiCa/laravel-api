@@ -9,10 +9,11 @@ trait BaseApiController
 	protected $limit = 25;
 	protected $model;
 	protected $fields = '*';
+	protected $key = 'id';
 
 	public function find($id)
 	{
-		return $this->model::find($id);
+		return $this->model::where($this->key, $id)->first();
 	}
 
 	public function limit(Request $request)
