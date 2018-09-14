@@ -11,10 +11,11 @@ trait BaseApiController
 	protected $fields = '*';
 	protected $indexWith = [];
 	protected $showWith = [];
+	protected $key = 'id';
 
 	public function find($id)
 	{
-		return $this->model::find($id);
+		return $this->model::where($this->key, $id)->first();
 	}
 
     public function paginate($records, $limit)
@@ -34,9 +35,9 @@ trait BaseApiController
 		}
 	}
 
-    public function select($fi)
+    public function select($fields)
     {
-        $fields = explode(',', $request->get('fields'));
+        $fields = explode(',', $fields);
         $fields = array_filter($fields, function($item) {
             return $item != '';
         });
