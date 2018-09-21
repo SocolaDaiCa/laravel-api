@@ -45,4 +45,30 @@ trait ApiController {
             return $this->responseErrors('store fail', $e->getTrace(), 500);
         }
 	}
+
+    public function update(Request $request, $id)
+    {
+        return $request->all();
+        return $this->_update(collect($request->all()), $id);
+	}
+
+    public function _update($params, $id)
+    {
+        $record = $this->find($id);
+        $record->update($params->all());
+        return $params;
+        return $this->responseSuccess('success');
+	}
+
+    public function destroy($id)
+    {
+        return $this->_destroy($id);
+	}
+
+    public function _destroy($id)
+    {
+        $record = $this->find($id);
+        $record->delete();
+        return $this->responseSuccess('delete success');
+	}
 }

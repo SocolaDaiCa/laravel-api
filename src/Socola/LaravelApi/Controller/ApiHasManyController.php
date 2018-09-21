@@ -4,7 +4,7 @@ namespace Socola\LaravelApi\Controller;
 
 use Illuminate\Http\Request;
 
-trait ApiHasMayController
+trait ApiHasManyController
 {
 	use BaseApiController;
 	protected $hasManyModel;
@@ -16,7 +16,7 @@ trait ApiHasMayController
 
 	public function _index($params, $id)
 	{
-		$limit = $this->limit($params);
+		$limit = $this->limit($params->get('limit'));
 		$records = $this->model::find($id)
 			->{$this->hasManyModel}();
 		if ($limit === 0) {
@@ -35,5 +35,6 @@ trait ApiHasMayController
 		$this->model::find($id)
 			->{$this->hasManyModel}()
 			->create($params);
+		return $this->responseSuccess('created');
 	}
 }

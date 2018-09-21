@@ -12,6 +12,12 @@ trait BaseApiController
 	protected $indexWith = [];
 	protected $showWith = [];
 	protected $key = 'id';
+	protected $resources = [
+	    'index'   => null,
+        'store'   => null,
+        'update'  => null,
+        'destroy' => null,
+    ];
 
 	public function find($id)
 	{
