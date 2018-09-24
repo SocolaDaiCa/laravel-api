@@ -40,10 +40,11 @@ trait ApiController {
     public function _store($params)
     {
         try{
-            $this->model::create($params);
+            $record = $this->model::create($params);
         } catch (\Exception $e) {
             return $this->responseErrors('store fail', $e->getTrace(), 500);
         }
+        return $record;
 	}
 
     public function update(Request $request, $id)
@@ -69,6 +70,6 @@ trait ApiController {
     {
         $record = $this->find($id);
         $record->delete();
-        return $this->responseSuccess('delete success');
+        return $this->responseSuccess('delete success', 204);
 	}
 }
