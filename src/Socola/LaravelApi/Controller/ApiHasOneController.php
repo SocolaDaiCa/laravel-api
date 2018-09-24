@@ -16,7 +16,7 @@ trait ApiHasOneController
     use BaseApiController;
     protected $hasOneModel;
 
-    public function index(Request $request)
+    public function index(Request $request, $id)
     {
         return $this->_index(collect($request->all()));
     }

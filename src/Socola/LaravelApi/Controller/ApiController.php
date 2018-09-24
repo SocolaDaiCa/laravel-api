@@ -40,7 +40,7 @@ trait ApiController {
     public function _store($params)
     {
         try{
-            $record = $this->model::create($params);
+            $record = $this->model::create($params->all());
         } catch (\Exception $e) {
             return $this->responseErrors('store fail', $e->getTrace(), 500);
         }
