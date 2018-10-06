@@ -12,17 +12,8 @@ use Illuminate\Http\Request;
 
 trait ApiManyToManyController
 {
-    use BaseApiController;
+    use ApiRelationshipController;
 
-    protected $manyToManyModel;
+//    pubf
 
-    public function index(Request $request, $id)
-    {
-        return $this->_index(collect($request->all()), $id);
-    }
-
-    public function _index($params, $id)
-    {
-
-    }
 }

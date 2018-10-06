@@ -2,16 +2,28 @@
 
 namespace Socola\LaravelApi\Controller;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 trait BaseApiController
 {
 	protected $limit = 25;
-	protected $model;
+
 	protected $fields = '*';
 	protected $indexWith = [];
 	protected $showWith = [];
-	protected $key = 'id';
+
+    protected $model;
+	protected $modelFind = 'find';
+
+	protected $relasionships = [
+	    /* 'cars' => 'sync' */
+    ];
+
+	/* Request */
+    protected $storeRequest;
+    protected $updateRequest;
+
 	protected $resources = [
 	    'index'   => null,
         'store'   => null,
@@ -19,9 +31,13 @@ trait BaseApiController
         'destroy' => null,
     ];
 
-	public function find($id)
-	{
-		return $this->model::where($this->key, $id)->first();
+    public function find($id)
+    {
+        return $this->modelFind($id);
+    }
+    public function modelFind($id)
+    {
+        return $this->model::{$this->modelFind}($id);
 	}
 
     public function paginate($records, $limit)
