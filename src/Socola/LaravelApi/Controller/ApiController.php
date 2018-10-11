@@ -16,12 +16,13 @@ trait ApiController
     public function _index($request)
     {
         $request = collect($request);
-        $records = $this->model::select($request->get('fields', $this->fields));
+        $fields = $request->get('fields', $this->indexSelect);
+        $records = $this->model::select($fields);
 
         $limit = $request->get('limit', $this->limit) ?: $records->count();
         $records->with($this->indexWith);
         $paginate = $records->paginate($limit);
-        return $paginate;
+        return $this->getResourceCollection($paginate);
     }
 
     public function show($id)

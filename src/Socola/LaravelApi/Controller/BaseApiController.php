@@ -9,12 +9,16 @@ trait BaseApiController
 {
 	protected $limit = 25;
 
-	protected $fields = '*';
-	protected $indexWith = [];
-	protected $showWith = [];
+	protected $fields      = '*';
+	protected $indexWith   = [];
+	protected $showWith    = [];
+	protected $indexSelect = '*';
+	protected $showSelect  = '*';
 
     protected $model;
 	protected $modelFind = 'find';
+	protected $resource;
+	protected $resourceCollection;
 
 	protected $relasionships = [
 	    /* 'cars' => 'sync' */
@@ -85,5 +89,22 @@ trait BaseApiController
             'message' => $message,
             'status'  => $status,
         ], $status);
+    }
+
+
+    public function getResource($records)
+    {
+        if(!empty($this->resourceCollection)) {
+            return new $this->resourceCollection($records);
+        }
+        return $records;
+    }
+
+    public function getResourceCollection($records)
+    {
+        if(!empty($this->resource)) {
+            return new $this->resource($records);
+        }
+        return $records;
     }
 }
