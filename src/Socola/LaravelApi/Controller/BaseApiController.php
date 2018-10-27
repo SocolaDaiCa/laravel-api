@@ -20,6 +20,8 @@ trait BaseApiController
 	protected $resource;
 	protected $resourceCollection;
 
+	protected $orderBy = [];
+
 	protected $relasionships = [
 	    /* 'cars' => 'sync' */
     ];
