@@ -107,4 +107,13 @@ trait BaseApiController
         }
         return $records;
     }
+
+    public function sort($records)
+    {
+        foreach ($this->orderBy as $column) {
+            $order = ($column[0] == '-') ? 'DESC' : 'ASC';
+            $records->orderBy(trim($column, '-'), $order);
+        }
+        return $records;
+    }
 }

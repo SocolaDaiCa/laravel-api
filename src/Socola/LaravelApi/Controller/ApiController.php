@@ -21,7 +21,7 @@ trait ApiController
 
         $limit = $request->get('limit', $this->limit) ?: $records->count();
         $records->with($this->indexWith);
-        $paginate = $records->paginate($limit);
+        $paginate = $this->sort($records)->paginate($limit);
         return $this->getResourceCollection($paginate);
     }
 
