@@ -10,10 +10,10 @@ trait BaseApiController
 	protected $limit = 25;
 
 	protected $fields      = '*';
-	protected $indexWith   = [];
-	protected $showWith    = [];
-	protected $indexSelect = '*';
-	protected $showSelect  = '*';
+    protected $indexWith   = [];
+    protected $showWith    = [];
+    protected $indexSelect = '*';
+    protected $showSelect  = '*';
 
     protected $model;
 	protected $modelFind = 'find';
