@@ -9,12 +9,21 @@ trait BaseApiController
 {
 	protected $limit = 25;
 
-	protected $fields      = '*';
-    protected $indexWith   = [];
-    protected $showWith    = [];
-    protected $indexSelect = '*';
-    protected $showSelect  = '*';
+    protected $fields      = '*';
 
+    /* index */
+    protected $indexWith   = [];
+    protected $indexSelect = '*';
+    protected $indexAppends = [];
+    protected $indexWithCount = [];
+    /* show */
+    protected $showWith    = [];
+    protected $showSelect  = '*';
+    protected $showAppends = [];
+
+    /**
+     * @var Model
+     */
     protected $model;
 	protected $modelFind = 'find';
 	protected $resource;

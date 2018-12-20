@@ -17,10 +17,13 @@ trait ApiController
     {
         $request = collect($request);
         $fields = $request->get('fields', $this->indexSelect);
-        $records = $this->model::select($fields);
+        $records = $this->model::query();
 
         $limit = $request->get('limit', $this->limit) ?: $records->count();
-        $records->with($this->indexWith);
+        $records
+            ->select($fields)
+            ->with($this->indexWith)
+            ->withCount($this->indexWithCount);
         $paginate = $this->sort($records)->paginate($limit);
         return $this->getResourceCollection($paginate);
     }
@@ -30,9 +33,13 @@ trait ApiController
         return $this->_show($id);
     }
 
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function _show($id)
     {
-        return $this->find($id)->load($this->showWith);
+        return $this->find($id)->load($this->showWith)->setAppends($this->showAppends);
     }
 
     public function store(Request $request)
@@ -48,7 +55,7 @@ trait ApiController
     {
         $request = collect($request);
         $attributes = $request->except(array_keys($this->relasionships))->all();
-        $record = $this->model::create($attributes);
+        $record = $this->model::query()->create($attributes);
         foreach ($this->relasionships as $model => $relasionship) {
             if (!$request->has($model)) {
                 continue;

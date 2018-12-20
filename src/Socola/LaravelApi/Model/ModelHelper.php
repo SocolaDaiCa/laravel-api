@@ -13,13 +13,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 trait ModelHelper
 {
-    public static function scopeFindByName(Builder $query, $name)
+    public function scopeFindByName(Builder $query, $name)
     {
         return $query->where('name', $name)->first();
     }
 
-    public static function scopeFindBySlug(Builder $query, $slug)
+    public function scopeFindBySlug(Builder $query, $slug)
     {
         return $query->where('slug', $slug)->first();
+    }
+
+    public function scopeFindOrFailBySlug(Builder $query, $slug)
+    {
+        return $query->where('slug', $slug)->firstOrFail();
     }
 }
