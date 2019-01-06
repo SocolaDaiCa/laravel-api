@@ -46,13 +46,15 @@ trait BaseApiController
         'destroy' => null,
     ];
 
-    public function find($id)
+    public function find($id, $fields = ['*'])
     {
-        return $this->modelFind($id);
+        return $this->modelFind($id, $fields);
     }
-    public function modelFind($id)
+    public function modelFind($id, $fields = ['*'])
     {
-        return $this->model::{$this->modelFind}($id);
+        return $this->model::query()
+            ->select($fields)
+            ->{$this->modelFind}($id);
 	}
 
     public function paginate($records, $limit)

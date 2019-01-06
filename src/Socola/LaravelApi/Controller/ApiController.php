@@ -39,7 +39,10 @@ trait ApiController
      */
     public function _show($id)
     {
-        return $this->find($id)->load($this->showWith)->setAppends($this->showAppends);
+        return $this->find($id, $this->showSelect)
+            ->setAppends($this->showAppends)
+            ->load($this->showWith)
+        ;
     }
 
     public function store(Request $request)
