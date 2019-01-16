@@ -10,12 +10,15 @@ namespace Socola\LaravelApi\Controller;
 
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 trait ApiRelationshipController
 {
     use BaseApiController;
 
-    protected $relasionshipModelFind = 'find';
+    protected $relationFind = 'find';
+
+    protected $relation;
     protected $relasionshipModel;
     protected $modelId;
 
@@ -31,103 +34,80 @@ trait ApiRelationshipController
      */
     public function index(Request $request, $modelId = null)
     {
-        $modelId = $modelId ?? $this->modelId;
-        return $this->_index($request->all(), $modelId);
+        return $this->_index(collect($request->all()), $modelId);
     }
 
-    public function _index($request, $modelId = null)
+    public function relation()
     {
-        $modelId = $modelId ?? $this->modelId;
-        $request = collect($request);
-        $records = $this->relationshipModel($modelId);
-        $limit   = $request->get('limit', $this->limit) ?: $records->count();
-        return $this->sort($records)
-            ->select($this->indexSelect)
-            ->withCount($this->indexWithCount)
+        $this->response->{$this->relation}();
+        return $this;
+    }
+
+    public function _index($modelId = null)
+    {
+        return $this->modelFind($modelId ?: $this->modelId)
+            ->relation()
             ->with($this->indexWith)
-            ->paginate($limit, $this->indexWith)
-            ;
+            ->withCount($this->indexWithCount)
+            ->orderBy($this->orderBy)
+            ->paginate($this->limit)->get();
     }
 
-    /**
-     * @param Request $request
-     * @param $modelId
-     * @param $relationshipModelId
-     * @return mixed
-     */
-    public function show(Request $request, $modelId, $relationshipModelId = null)
+    public function show($modelId, $relationId = null)
     {
-        if($relationshipModelId == null) {
-            $relationshipModelId = $modelId;
+        return $this->_show($modelId, $relationId);
+    }
+
+    public function _show($modelId, $relationId)
+    {
+        if(empty($relationId)) {
+            $relationId = $modelId;
             $modelId = $this->modelId;
         }
-        return $this->_show($request->all(), $modelId, $relationshipModelId);
+        return $this->query()
+            ->findBy($modelId, $this->modelFind)
+            ->relation()
+            ->select($this->showSelect)
+            ->findBy($relationId, $this->relationFind)
+            ->with($this->showWith)
+            ->withCount($this->showWithCount)
+            ->get();
     }
 
-    public function _show($request, $modelId, $relationshipModelId)
-    {
-        $request = collect($request);
-        return $this->relationshipModelFind($modelId, $relationshipModelId)
-            ->load($this->showWith);
-    }
-
-    /**
-     * @param Request $request
-     * @param $modelId
-     * @param $relationshipModel
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(Request $request, $modelId = null)
     {
         $modelId = $modelId ?? $this->modelId;
-        return $this->_store($request->all(), $modelId);
+        return $this->_store(collect($request->all()), $modelId);
     }
 
-    public function _store($request, $modelId)
+    public function _store(Collection $request, $modelId = null)
     {
-        $request = collect($request);
-        $relasionshipFields = $request->except(array_keys($this->relasionships));
-        $record = $this->relationshipModel($modelId)
-            ->{$this->store}($request->except($relasionshipFields));
-
-        foreach ($this->relasionships as $field => $type) {
-            if(!$request->has($field)){
-                continue;
-            }
-            $record->{$field}()->{$type}($request->get($field));
-        }
+        $record = $this->query()
+            ->findBy($modelId ?: $this->model, $this->modelFind)
+            ->response
+            ->create($request->except(array_keys($this->relations))->toArray());
+        $this->updateRelations($record, $request);
         return $this->responseSuccess('', 204);
     }
 
-    /**
-     * @param Request $request
-     * @param $modelId
-     * @param $relationshipModelId
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request, $modelId, $relationshipModelId = null)
+    public function update(Request $request, $modelId, $relationId = null)
     {
-        if($relationshipModelId == null) {
-            $relationshipModelId = $modelId;
-            $modelId = $this->modelId;
-        }
-        return $this->_update($request->all(), $modelId, $relationshipModelId);
+        return $this->_update(collect($request->all()), $modelId, $relationId);
     }
 
-    public function _update($request, $modelId, $relationshipModelId)
+    public function _update(Collection $request, $modelId, $relationId = null)
     {
-        $request = collect($request);
-        $record = $this->relationshipModelFind($modelId, $relationshipModelId);
-
-        $relasionshipFields = $request->except(array_keys($this->relasionships));
-        $record->store($request->except($relasionshipFields));
-
-        foreach ($this->relasionships as $field => $type) {
-            if(!$request->has($field)){
-                continue;
-            }
-            $record->{$field}()->{$type}($request->get($field));
+        if(empty($relationId)) {
+            $relationId = $modelId;
+            $modelId = $this->modelId;
         }
+        $record = $this->query()
+            ->findBy($modelId, $this->modelFind)
+            ->relation()
+            ->findBy($relationId, $relationId)
+            ->response
+            ->update($request->except(array_keys($this->relations))->toArray());
+        $this->updateRelations($record, $request);
         return $this->responseSuccess('', 204);
     }
 
@@ -136,34 +116,23 @@ trait ApiRelationshipController
      * @param $relationshipModelId
      * @return mixed
      */
-    public function destroy($modelId, $relationshipModelId = null)
+    public function destroy($modelId, $relationId = null)
     {
-        $relationshipModelId = $relationshipModelId ?? $modelId;
-        $modelId = $modelId ?? $this->modelId;
-        return $this->_destroy($modelId, $relationshipModelId, 'delete');
+        return $this->_destroy($modelId, $relationId);
     }
 
-    public function _destroy($request, $modelId, $relationshipModelId, $str)
+    public function _destroy($modelId, $relationId = null)
     {
-        $request = collect($request);
-        if($this->delete == $str) {
-            $this->relationshipModelFind($modelId, $relationshipModelId)
-                ->delete($request->all());
-        } else {
-            $this->relationshipModel($modelId)
-                ->{$this->delete}($request->all());
+        if(empty($relationId)) {
+            $relationId = $modelId;
+            $modelId = $this->modelId;
         }
+        $this->query()
+            ->findBy($modelId, $this->modelFind)
+            ->relation()
+            ->findBy($relationId, $this->relationFind)
+            ->response
+            ->delete();
         return $this->responseSuccess('', 204);
-    }
-
-    public function relationshipModel($modelId)
-    {
-        return $this->modelFind($modelId)->{$this->relasionshipModel}();
-    }
-
-    public function relationshipModelFind($modelId, $relationshipModelId)
-    {
-        return $this->relationshipModel($modelId)
-            ->{$this->relasionshipModelFind}($relationshipModelId);
     }
 }

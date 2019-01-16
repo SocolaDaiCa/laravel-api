@@ -3,29 +3,27 @@
 namespace Socola\LaravelApi\Controller;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 trait ApiController
 {
     use BaseApiController;
 
-    public function index(Request $request)
+    public function index()
     {
-        return $this->_index($request);
+        return $this->_index();
     }
 
-    public function _index($request)
+    public function _index()
     {
-        $request = collect($request);
-        $fields = $request->get('fields', $this->indexSelect);
-        $records = $this->model::query();
-
-        $limit = $request->get('limit', $this->limit) ?: $records->count();
-        $records
-            ->select($fields)
+        $paginate = $this->records()
+            ->select($this->indexSelect)
             ->with($this->indexWith)
-            ->withCount($this->indexWithCount);
-        $paginate = $this->sort($records)->paginate($limit);
-        return $this->getResourceCollection($paginate);
+            ->withCount($this->indexWithCount)
+            ->orderBy($this->orderBy)
+            ->paginate($this->limit, $this->indexSelect)
+            ;
+        return $this->getResourceCollection($paginate->get());
     }
 
     public function show($id)
@@ -33,16 +31,12 @@ trait ApiController
         return $this->_show($id);
     }
 
-    /**
-     * @param $id
-     * @return mixed
-     */
     public function _show($id)
     {
-        return $this->find($id, $this->showSelect)
-            ->setAppends($this->showAppends)
-            ->load($this->showWith)
-        ;
+        return $this->modelFind($id, $this->showSelect)
+            ->with($this->showWith)
+            ->withCount($this->showWithCount)
+            ->get();
     }
 
     public function store(Request $request)
@@ -57,14 +51,9 @@ trait ApiController
     public function _store($request)
     {
         $request = collect($request);
-        $attributes = $request->except(array_keys($this->relasionships))->all();
+        $attributes = $request->except(array_keys($this->relations))->all();
         $record = $this->model::query()->create($attributes);
-        foreach ($this->relasionships as $model => $relasionship) {
-            if (!$request->has($model)) {
-                continue;
-            }
-            $record->{$model}()->{$relasionship}($request->get($model));
-        }
+        $this->updateRelations($record, $request);
         return $this->responseSuccess('success');
     }
 
@@ -74,29 +63,23 @@ trait ApiController
             $updateRequest = new $this->updateRequest();
             $request->validate($updateRequest->rules());
         }
-        return $this->_update($request->all(), $id);
+        return $this->_update(collect($request->all()), $id);
     }
 
-    public function _update($params, $id)
+    public function _update(Collection $request, $id)
     {
-        $params = collect($params);
-
-        $record = $this->find($id);
-        $record->update($params->except(array_keys($this->relasionships)));
-        foreach ($this->relasionships as $model => $relasionship) {
-            $record->{$model}()->{$relasionship}($params->get($model));
-        }
+        $this->updateRelations($this->modelFind($id)->get(), $request);
         return $this->responseSuccess('success');
     }
 
     public function destroy($id)
     {
-        return $this->_destroy($id, 'delete');
+        return $this->_destroy($id);
     }
 
     public function _destroy($id)
     {
-        $this->find($id)->delete();
+        $this->modelFind($id)->get()->delete();
         return $this->responseSuccess('delete success', 204);
     }
 }

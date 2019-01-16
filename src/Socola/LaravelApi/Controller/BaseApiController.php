@@ -2,90 +2,130 @@
 
 namespace Socola\LaravelApi\Controller;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 trait BaseApiController
 {
-	protected $limit = 25;
-
-    protected $fields      = '*';
-
-    /* index */
-    protected $indexWith   = [];
-    protected $indexSelect = '*';
-    protected $indexAppends = [];
-    protected $indexWithCount = [];
-    /* show */
-    protected $showWith    = [];
-    protected $showSelect  = '*';
-    protected $showAppends = [];
-
     /**
      * @var Model
      */
     protected $model;
-	protected $modelFind = 'find';
-	protected $resource;
-	protected $resourceCollection;
 
-	protected $orderBy = [];
+    protected $limit = 25;
 
-	protected $relasionships = [
-	    /* 'cars' => 'sync' */
-    ];
+    protected $modelFind = 'find';
 
-	/* Request */
+    protected $orderBy = [];
+
+    protected $relations = [];
+
+    /**
+     * @var Builder
+     */
+    protected $response;
+    /* resource */
+    protected $resource;
+    protected $resourceCollection;
+
+    /* index */
+    protected $indexSelectable = ['*'];
+    protected $indexSelect = ['*'];
+
+    protected $indexWith   = [];
+
+    protected $indexAppends = [];
+
+    protected $indexWithCount = [];
+
+    /* show */
+    protected $showWith    = [];
+
+    protected $showSelect  = ['*'];
+
+    protected $showAppends = [];
+
+    protected $showWithCount = [];
+
+    /* validate */
     protected $storeRequest;
     protected $updateRequest;
 
-	protected $resources = [
-	    'index'   => null,
-        'store'   => null,
-        'update'  => null,
-        'destroy' => null,
-    ];
-
-    public function find($id, $fields = ['*'])
-    {
-        return $this->modelFind($id, $fields);
-    }
     public function modelFind($id, $fields = ['*'])
     {
-        return $this->model::query()
-            ->select($fields)
-            ->{$this->modelFind}($id);
-	}
+        $this->records()->select($fields);
+        $this->response->{$this->modelFind}($id);
+        return $this;
+    }
 
-    public function paginate($records, $limit)
+    protected $result;
+    public function records()
     {
-        return $records->paginate($this->limit($limit));
-	}
+        $this->result = $this->model::query();
+        return $this;
+    }
 
-	public function limit($limit)
-	{
-		switch ($limit) {
-			case 0:
-				return 0;
-			case null:
-				return $this->limit;
-			default:
-				return $limit;
-		}
-	}
-
-    public function select($fields)
+    public function paginate($limitable = 25, $columns = ['*'])
     {
-        $fields = explode(',', $fields);
-        $fields = array_filter($fields, function($item) {
-            return $item != '';
-        });
-        if(!empty($fields)) {
+        $limit = \request('limit', 0) ?: $limitable;
+        $this->response->paginate($limit, $columns);
+        return $this;
+	}
+
+    public function with(array $relationsable)
+    {
+        $relations = explode(',', \request('with', ''));
+        $this->response->with($this->intersect($relations, $relationsable));
+        return $this;
+	}
+
+    public function withCount(array $relationsable)
+    {
+        $relations = explode(',', \request('withCount', ''));
+        $this->response->withCount($this->intersect($relations, $relationsable));
+        return $this;
+	}
+
+    public function orderBy(array $columns)
+    {
+        $columns = explode(',', \request('orderBy', '')) ?: $columns;
+        foreach ($columns as $column) {
+            $order = ($column[0] == '-') ? 'DESC' : 'ASC';
+            $this->response->orderBy(trim($column, '-'), $order);
+        }
+        return $this;
+	}
+
+    public function intersect(array $fields, array $fieldsable)
+    {
+        if(empty($fields)) {
+            return $fieldsable;
+        }
+
+        if(count($fieldsable) == 1 && $fieldsable[0] == '*') {
             return $fields;
         }
-        return $this->fields;
+
+        return array_intersect($fieldsable, $fields);
 	}
-    public function responseErrors($message, $errors, $status)
+
+    public function select(array $fieldsable)
+    {
+        $fields = explode(',', \request('fields', ''));
+        $this->response->select($this->intersect($fields, $fieldsable));
+        return $this;
+	}
+
+    /**
+     * @param string $message
+     * @param array $errors
+     * @param int $status
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function responseErrors(string $message, array $errors, int $status)
     {
         $message = $message ?: $message = 'something wrong';
         $errors = array_wrap($errors);
@@ -96,7 +136,14 @@ trait BaseApiController
         ], $status);
     }
 
-    public function responseSuccess($message, $status = 200)
+    /* đã test */
+
+    /**
+     * @param string $message
+     * @param int $status
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function responseSuccess(string $message, int $status = 200)
     {
         return response()->json([
             'message' => $message,
@@ -104,8 +151,11 @@ trait BaseApiController
         ], $status);
     }
 
-
-    public function getResource($records)
+    /**
+     * @param Builder $records
+     * @return Builder
+     */
+    public function getResource(Builder $records)
     {
         if(!empty($this->resourceCollection)) {
             return new $this->resourceCollection($records);
@@ -113,7 +163,11 @@ trait BaseApiController
         return $records;
     }
 
-    public function getResourceCollection($records)
+    /**
+     * @param LengthAwarePaginator $records
+     * @return LengthAwarePaginator
+     */
+    public function getResourceCollection(LengthAwarePaginator $records)
     {
         if(!empty($this->resource)) {
             return new $this->resource($records);
@@ -121,12 +175,46 @@ trait BaseApiController
         return $records;
     }
 
-    public function sort($records)
+    /**
+     * @param Builder $records
+     * @return Builder
+     */
+    public function sort(Builder $records)
     {
         foreach ($this->orderBy as $column) {
             $order = ($column[0] == '-') ? 'DESC' : 'ASC';
             $records->orderBy(trim($column, '-'), $order);
         }
         return $records;
+    }
+
+    /**
+     * @return Builder | LengthAwarePaginator
+     */
+    public function get()
+    {
+        return $this->response;
+    }
+
+    public function updateRelations($record, Collection $request)
+    {
+        foreach ($this->relations as $model => $relation) {
+            if (!$request->has($model)) {
+                continue;
+            }
+            $record->{$model}()->{$relation}($request->get($model));
+        }
+    }
+
+    public function findBy($id, string $by)
+    {
+        $this->response->{$by}($id);
+        return $this;
+    }
+
+    public function query()
+    {
+        $this->response = $this->model::query();
+        return $this;
     }
 }
