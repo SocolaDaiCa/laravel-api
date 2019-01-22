@@ -16,14 +16,15 @@ trait ApiController
 
     public function _index()
     {
-        $paginate = $this->records()
+        $this->records()
+            ->indexQuery()
             ->select($this->indexSelect)
             ->with($this->indexWith)
             ->withCount($this->indexWithCount)
             ->orderBy($this->orderBy)
             ->paginate($this->limit, $this->indexSelect)
             ;
-        return $this->getResourceCollection($paginate->get());
+        return $this->getResourceCollection($this->response);
     }
 
     public function show($id)
@@ -51,7 +52,7 @@ trait ApiController
     public function _store($request)
     {
         $request = collect($request);
-        $attributes = $request->except(array_keys($this->relations))->all();
+        $attributes = $request->except(array_keys($this->relations))->toArray();
         $record = $this->model::query()->create($attributes);
         $this->updateRelations($record, $request);
         return $this->responseSuccess('success');
@@ -68,6 +69,8 @@ trait ApiController
 
     public function _update(Collection $request, $id)
     {
+        $record = $this->modelFind($id)->get();
+        $record->update($request->except(array_keys($this->relations))->toArray());
         $this->updateRelations($this->modelFind($id)->get(), $request);
         return $this->responseSuccess('success');
     }

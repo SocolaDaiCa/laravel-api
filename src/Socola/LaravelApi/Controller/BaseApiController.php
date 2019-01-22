@@ -56,43 +56,54 @@ trait BaseApiController
 
     public function modelFind($id, $fields = ['*'])
     {
-        $this->records()->select($fields);
-        $this->response->{$this->modelFind}($id);
+        $this->response = $this->model::query()->select($fields)->{$this->modelFind}($id);
         return $this;
     }
 
-    protected $result;
     public function records()
     {
-        $this->result = $this->model::query();
+        $this->response = $this->model::query();
+        return $this;
+    }
+
+    public function indexQuery()
+    {
         return $this;
     }
 
     public function paginate($limitable = 25, $columns = ['*'])
     {
-        $limit = \request('limit', 0) ?: $limitable;
-        $this->response->paginate($limit, $columns);
+        $limit = \request('limit', 0);
+        if($limitable == 0 && $limit == 0) {
+            $limit = $this->response->count();
+        } else {
+            $limit = min($limit, $limitable);
+        }
+        $this->response = $this->response->paginate($limit, $columns);
         return $this;
 	}
 
     public function with(array $relationsable)
     {
-        $relations = explode(',', \request('with', ''));
+        $relations = $this->commaToArray(\request('with', ''));
         $this->response->with($this->intersect($relations, $relationsable));
         return $this;
 	}
 
     public function withCount(array $relationsable)
     {
-        $relations = explode(',', \request('withCount', ''));
+        $relations = $this->commaToArray(\request('withCount', ''));
         $this->response->withCount($this->intersect($relations, $relationsable));
         return $this;
 	}
 
     public function orderBy(array $columns)
     {
-        $columns = explode(',', \request('orderBy', '')) ?: $columns;
+        $columns = $this->commaToArray(\request('orderBy', '')) ?: $columns;
         foreach ($columns as $column) {
+            if($column == '') {
+                continue;
+            }
             $order = ($column[0] == '-') ? 'DESC' : 'ASC';
             $this->response->orderBy(trim($column, '-'), $order);
         }
@@ -112,9 +123,17 @@ trait BaseApiController
         return array_intersect($fieldsable, $fields);
 	}
 
+    public function commaToArray(string $string)
+    {
+        $arr = explode(',', \request('fields', ''));
+        if($arr[0] == '') {
+            array_shift($arr);
+        }
+        return $arr;
+    }
     public function select(array $fieldsable)
     {
-        $fields = explode(',', \request('fields', ''));
+        $fields = $this->commaToArray(\request('fields', ''));
         $this->response->select($this->intersect($fields, $fieldsable));
         return $this;
 	}
