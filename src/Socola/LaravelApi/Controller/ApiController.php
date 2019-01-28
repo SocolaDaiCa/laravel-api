@@ -82,7 +82,11 @@ trait ApiController
 
     public function _destroy($id)
     {
-        $this->modelFind($id)->get()->delete();
+        $object = $this->modelFind($id)->get();
+        if ($object == null) {
+            return $this->responseErrors('Target not found.', [], 404);
+        }
+        $object->delete();
         return $this->responseSuccess('delete success', 204);
     }
 }
