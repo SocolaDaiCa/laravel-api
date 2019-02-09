@@ -53,12 +53,12 @@ trait BaseApiController
     /* validate */
     protected $storeRequest;
     protected $updateRequest;
-
-    public function modelFind($id, $fields = ['*'])
-    {
-        $this->response = $this->model::query()->select($fields)->{$this->modelFind}($id);
-        return $this;
-    }
+//
+//    public function modelFind($id, $fields = ['*'])
+//    {
+//        $this->response = $this->model::query()->select($fields)->{$this->modelFind}($id);
+//        return $this;
+//    }
 
     public function records()
     {
@@ -227,13 +227,14 @@ trait BaseApiController
 
     public function findBy($id, string $by)
     {
-        $this->response->{$by}($id);
+        $this->response = $this->response->{$by}($id);
         return $this;
     }
 
     public function query()
     {
-        $this->response = $this->model::query();
+//        $this->response = $this->model::query();
+        $this->response = new $this->model();
         return $this;
     }
 }
