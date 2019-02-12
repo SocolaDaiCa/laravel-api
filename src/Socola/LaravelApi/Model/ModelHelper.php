@@ -20,7 +20,7 @@ trait ModelHelper
 
     public function scopeFindBySlug(Builder $query, $slug)
     {
-        return $query->where('slug', $slug)->first();
+        return $query->where('slug', 'like', $slug)->first();
     }
 
     public function scopeFindOrFailBySlug(Builder $query, $slug)

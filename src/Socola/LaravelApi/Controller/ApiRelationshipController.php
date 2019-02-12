@@ -34,23 +34,28 @@ trait ApiRelationshipController
      */
     public function index(Request $request, $modelId = null)
     {
-        return $this->_index(collect($request->all()), $modelId);
+        return $this->_index($modelId);
     }
 
     public function relation()
     {
-        $this->response->{$this->relation}();
+        $this->response = $this->response->{$this->relation}();
         return $this;
     }
 
     public function _index($modelId = null)
     {
-        return $this->modelFind($modelId ?: $this->modelId)
+        return $this
+            ->query()
+            ->findBy($modelId ?: $this->modelId, $this->modelFind)
             ->relation()
+            ->select($this->indexSelect)
             ->with($this->indexWith)
             ->withCount($this->indexWithCount)
             ->orderBy($this->orderBy)
-            ->paginate($this->limit)->get();
+            ->paginate($this->limit, $this->indexSelect)
+            ->get()
+        ;
     }
 
     public function show($modelId, $relationId = null)
