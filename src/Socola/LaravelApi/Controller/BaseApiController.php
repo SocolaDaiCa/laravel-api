@@ -5,6 +5,7 @@ namespace Socola\LaravelApi\Controller;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -50,15 +51,20 @@ trait BaseApiController
 
     protected $showWithCount = [];
 
-    /* validate */
+    /**
+     * @var FormRequest
+     */
     protected $storeRequest;
+    /**
+     * @var FormRequest
+     */
     protected $updateRequest;
-//
-//    public function modelFind($id, $fields = ['*'])
-//    {
-//        $this->response = $this->model::query()->select($fields)->{$this->modelFind}($id);
-//        return $this;
-//    }
+
+    public function modelFind($id, $fields = ['*'])
+    {
+        $this->response = $this->model::query()->select($fields)->{$this->modelFind}($id);
+        return $this;
+    }
 
     public function records()
     {
@@ -233,8 +239,16 @@ trait BaseApiController
 
     public function query()
     {
-//        $this->response = $this->model::query();
         $this->response = new $this->model();
         return $this;
+    }
+
+    public function getValidatedOfRequest($requestClass) {
+        if(empty($requestClass)) {
+            return \request()->all();
+        }
+        $updateRequest = app($requestClass);
+        $updateRequest->validateResolved();
+        return $updateRequest->validated();
     }
 }
