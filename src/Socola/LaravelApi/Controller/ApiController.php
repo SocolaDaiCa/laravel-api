@@ -19,8 +19,8 @@ trait ApiController
     protected function _index()
     {
         $this->records()
-            ->indexQuery()
             ->select($this->indexSelect)
+            ->indexQuery()
             ->with($this->indexWith)
             ->withCount($this->indexWithCount)
             ->orderBy($this->orderBy)

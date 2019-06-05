@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 trait ModelHelper
 {
+    public function scopeFindByCode(Builder $query, $value)
+    {
+        return $query->where('code', $value)->first();
+    }
+
     public function scopeFindByName(Builder $query, $name)
     {
         return $query->where('name', $name)->first();
