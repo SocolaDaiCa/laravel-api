@@ -37,9 +37,8 @@ trait ApiController
     protected function _show($id)
     {
         return $this->modelFind($id, $this->showSelect)
-            ->with($this->showWith)
-            ->withCount($this->showWithCount)
-            ->get();
+            ->load($this->showWith)
+            ->withCount($this->showWithCount)->get();
     }
 
     public function store(Request $request)

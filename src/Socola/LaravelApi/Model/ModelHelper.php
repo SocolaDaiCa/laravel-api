@@ -32,4 +32,12 @@ trait ModelHelper
     {
         return $query->where('slug', $slug)->firstOrFail();
     }
+
+    public function scopeFilter(Builder $query, $dom, $values)
+    {
+        [$relation, $col] = explode('.', $dom);
+        return $query->whereHas($relation, function (Builder $query) use ($dom, $values){
+            $query->whereHas($dom, $values);
+        }, count($values));
+    }
 }

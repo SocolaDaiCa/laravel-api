@@ -89,6 +89,13 @@ trait BaseApiController
         return $this;
 	}
 
+    public function load(array $relationsable)
+    {
+        $relations = $this->commaToArray(\request('with', ''));
+        $this->response->load($this->intersect($relations, $relationsable));
+        return $this;
+    }
+
     public function with(array $relationsable)
     {
         $relations = $this->commaToArray(\request('with', ''));
@@ -129,9 +136,12 @@ trait BaseApiController
         return array_intersect($fieldsable, $fields);
 	}
 
-    public function commaToArray(string $string)
+    public function commaToArray($string)
     {
-        $arr = explode(',', \request('fields', ''));
+        if(empty($string)) {
+            return [];
+        }
+        $arr = explode(',', $string);
         if($arr[0] == '') {
             array_shift($arr);
         }
@@ -168,7 +178,7 @@ trait BaseApiController
      * @param int $status
      * @return \Illuminate\Http\JsonResponse
      */
-    public function responseSuccess(string $message, int $status = 200)
+    public function responseSuccess(string $message, $status = 200)
     {
         return response()->json([
             'message' => $message,
