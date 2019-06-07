@@ -112,7 +112,7 @@ trait BaseApiController
 
     public function orderBy(array $columns)
     {
-        $columns = $this->commaToArray(\request('orderBy', '')) ?: $columns;
+        $columns = $this->commaToArray(\request('order_by', '')) ?: $columns;
         foreach ($columns as $column) {
             if($column == '') {
                 continue;
