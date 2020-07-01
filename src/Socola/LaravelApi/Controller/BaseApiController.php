@@ -79,7 +79,7 @@ trait BaseApiController
 
     public function paginate($limitable = 25, $columns = ['*'])
     {
-        $limit = \request('limit', 0);
+        $limit = \request('limit', $limitable);
         if($limitable == 0 && $limit == 0) {
             $limit = $this->response->count();
         } else {
